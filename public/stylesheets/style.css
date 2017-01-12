@@ -1,0 +1,40 @@
+body {
+  padding: 50px;
+  font-family: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.heading {
+    padding-bottom: 50px;
+}
+
+.monospace {
+    font-family: "Lucida Console", "Lucida Sans Typewriter", monaco, "Bitstream Vera Sans Mono", monospace !important;
+}
+
+.link {
+    cursor: pointer !important;
+}
+
+#frame1 {
+    background-color: lightblue;
+    display: inline;
+}
+
+#frame2 {
+    background-color: lightgreen;
+    display: inline;
+}
+
+#frame3 {
+    background-color: lightpink;
+    display: inline;
+}
+
+#lnew {
+    display: float;
+    float: right;
+}

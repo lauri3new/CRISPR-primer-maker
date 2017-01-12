@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>C. elegans CRISPR Primer Maker</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="row heading">
+        <div class="col-md-3"></div>
+        <div class="col-md-6 Title"><a href="/"><H1>C. elegans CRISPR Primer Maker V 0.1</H1></a></div>
+        <div class="col-md-3"></div>
+    </div>
+    <div class="row">
+        {{#if output}}
+<div class="alert alert-success">
+  <strong>Success!</strong></div>
+{{/if}}
+{{#if warnings}}
+<div class="alert alert-warning">{{#each warnings}}{{this}}{{/each}}</div>
+{{/if}}
+{{#if errors}}
+<div class="alert alert-danger">{{#each errors}}{{{this}}}{{/each}}</div>
+{{/if}}
+      </div><div class="row">
+      <h3>Instructions:</h3><p>Please enter the 20bp sequence directly (5') upstream of the PAM site (19bp protospacer + 1bp), the program will return the primers to be ordered with Bsa1 overhangs ready for cloning into pRB1017.</p>
+      </div>
+    <br>
+<div class="row">
+<form id="form1" action="/output" method='post'>
+<div class="form-group row">
+  <label for="protospacer" class="col-xs-3 col-form-label">5' N + protospacer 5' -> 3'</label>
+  <div class="col-xs-4">
+    <input class="form-control" placeholder="20 bp" value="{{input.protospacer}}" name="protospacer">
+  </div>
+</div>
+<br><p> OPTIONAL - also enter the homology arms and insert sequence (if desired) to return the full homology template and predicted translation (feature still in development).</p><br>
+<div class="form-group row">
+  <label for="homologyArm5" class="col-xs-3 col-form-label">5' Homology arm 5' -> 3'</label>
+  <div class="col-xs-9">
+    <input class="form-control" placeholder="~50bp upstream homology" value="{{input.homologyArm5}}"  name="homologyArm5">
+  </div>
+</div>
+<div class="form-group row">
+  <label for="Insert" class="col-xs-3 col-form-label">Insert 5' -> 3'</label>
+  <div class="col-xs-9">
+    <input class="form-control" placeholder="Insert sequence" value="{{input.insert}}"  name="Insert">
+  </div>
+</div>
+<div class="form-group row">
+  <label for="homologyArm3" class="col-xs-3 col-form-label">3' Homology arm 5' -> 3'</label>
+  <div class="col-xs-9">
+    <input class="form-control" placeholder="~50bp downstream homology" value="{{input.homologyArm3}}"  name="homologyArm3">
+    </div></div>
+<div class="form-group row">
+  <label for="homologyArm3" class="col-xs-3 col-form-label">Sense or Anti-Sense strand :</label>
+  <div class="col-xs-2">
+    <select class="form-control" placeholder="strand" value="{{input.strand}}"  name="strand">
+        <option>Sense</option>
+    <option>Anti-Sense</option>
+      </select>
+    </div></div>
+
+    <button type="submit" form="form1" class="btn btn-primary">Submit!</button>
+</form>
+    </div>
+<div>
+{{#if output}}
+<div class="row monospace">
+<br>
+{{#if output.bsa15}}
+<br><h3>OUTPUT</h3><br>
+    <p>pRB1017 Primer 1 5' -> 3' : {{output.bsa15}}</p>
+    <p>pRB1017 Primer 2 5' -> 3' : {{output.bsa13}}</p>
+    {{/if}}
+    {{#if output.homologylength}}
+    <p>Homology repair template 5' -> 3' : {{output.homology53}}</p>
+    <br>
+    <br>
+    <p>Homology repair template Info ( length : {{output.homologylength}} bp ) :</p>
+    <p>Anti-Sense strand</p>
+    <p>{{output.antiSense}}</p>
+    <p>Sense strand and translation prediction</p>
+    <p id="sense-strand">{{output.sense}}</p>
+   <div id ="frame1">&nbsp;{{{output.frame1}}}</div>
+
+    <div>&nbsp;<div id="frame2">&nbsp;{{{output.frame2}}}</div></div>
+
+    <div>&nbsp;&nbsp;<div id="frame3">{{{output.frame3}}}</div></div>
+{{/if}}
+</div>
+{{else}}
+{{/if}}
+</div>
+<br><br><br>
+<div class="row">
+<a class="link" data-toggle="collapse" data-target="#sourcecode" ><h3 class="link">show source code</h3></a>
+      
+<div class="collapse" id="sourcecode">
+
+<pre style="background:#fff;color:#3b3b3b">
+<span style="color:#af82d4">//input variables from form</span>
+<span style="color:#069;font-weight:700">var</span> protospacer <span style="color:#069;font-weight:700">=</span> req.body.protospacer;
+
+<span style="color:#af82d4">// input object stores input variables</span>
+<span style="color:#069;font-weight:700">var</span> <span style="color:#45ae34;font-weight:700">input</span> <span style="color:#069;font-weight:700">=</span> {
+protospacer <span style="color:#069;font-weight:700">:</span> protospacer
+}
+    
+<span style="color:#af82d4">// errors array</span>
+<span style="color:#069;font-weight:700">var</span> errorsarr <span style="color:#069;font-weight:700">=</span> [<span style="color:#666">"&lt;strong>Errors - &lt;/strong>"</span>];
+
+<span style="color:#af82d4">// warnings array</span>
+<span style="color:#069;font-weight:700">var</span> warnings <span style="color:#069;font-weight:700">=</span> [];
+
+<span style="color:#af82d4">// detect errors: if protospacer contains C at space 19, if protospacer too long/short or if protospacer/homology template contains non standard charecters</span>
+<span style="color:#069;font-weight:700">if</span> (protospacer.<span style="color:#45ae34;font-weight:700">charAt</span>(<span style="color:#a8017e">19</span>).<span style="color:#45ae34;font-weight:700">toUpperCase</span>() <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"C"</span>) { errorsarr.<span style="color:#45ae34;font-weight:700">push</span>(<span style="color:#666">" C at position 19 in protospacer! "</span>)};
+<span style="color:#069;font-weight:700">if</span> (protospacer <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">""</span> || protospacer <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">" "</span>) {<span style="color:#069;font-weight:700">var</span> noProtospacer <span style="color:#069;font-weight:700">=</span> <span style="color:#a535ae">true</span>; warnings.<span style="color:#45ae34;font-weight:700">push</span>(<span style="color:#666">" Protospacer not  provided. "</span>);}
+<span style="color:#069;font-weight:700">else</span> <span style="color:#069;font-weight:700">if</span> (protospacer.<span style="color:#45ae34;font-weight:700">length</span> <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#a8017e">20</span> <span style="color:#069;font-weight:700">&amp;</span><span style="color:#069;font-weight:700">&amp;</span> protospacer.<span style="color:#45ae34;font-weight:700">match</span>(<span style="color:#069;font-weight:700">/</span>[^actgACTG]<span style="color:#069;font-weight:700">/</span>g) <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#a535ae">null</span> ) {}
+<span style="color:#069;font-weight:700">else</span> {errorsarr.<span style="color:#45ae34;font-weight:700">push</span>(<span style="color:#666">" Protospacer sequence is not 20bp long or contains non standard charecters. "</span>)};
+
+<span style="color:#af82d4">// reverse function reverse input string</span>
+<span style="color:#ff5600">function</span> <span style="color:#21439c">reverse</span>(<span style="color:#0053ff;font-weight:700">str</span>) {
+<span style="color:#069;font-weight:700">return</span> str.<span style="color:#45ae34;font-weight:700">split</span>(<span style="color:#666">""</span>).<span style="color:#45ae34;font-weight:700">reverse</span>().<span style="color:#45ae34;font-weight:700">join</span>(<span style="color:#666">""</span>);
+}
+
+<span style="color:#af82d4">// revCom returns reverse complement of input string in matching Case</span>
+<span style="color:#ff5600">function</span> <span style="color:#21439c">revCom</span>(<span style="color:#0053ff;font-weight:700">str</span>,<span style="color:#0053ff;font-weight:700">reverse</span>){
+<span style="color:#069;font-weight:700">var</span> <span style="color:#45ae34;font-weight:700">input</span> <span style="color:#069;font-weight:700">=</span> str.<span style="color:#45ae34;font-weight:700">split</span>(<span style="color:#666">""</span>).<span style="color:#45ae34;font-weight:700">reverse</span>();
+<span style="color:#069;font-weight:700">var</span> output <span style="color:#069;font-weight:700">=</span> <span style="color:#666">""</span>;
+<span style="color:#069;font-weight:700">for</span> (i <span style="color:#069;font-weight:700">=</span> <span style="color:#a8017e">0</span> ; i &lt; <span style="color:#45ae34;font-weight:700">input</span>.<span style="color:#45ae34;font-weight:700">length</span>; i<span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">+</span>)
+    {
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"a"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"t"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"A"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"T"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"t"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"a"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"T"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"A"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"c"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"g"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"C"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"G"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"g"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"c"</span>}
+        <span style="color:#069;font-weight:700">if</span> (<span style="color:#45ae34;font-weight:700">input</span>[i] <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"G"</span> ) { output <span style="color:#069;font-weight:700">+</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"C"</span>}
+    }
+<span style="color:#069;font-weight:700">return</span> output
+}
+
+<span style="color:#af82d4">// declare reverse complement of insert</span>
+<span style="color:#069;font-weight:700">var</span> revComProtospacer <span style="color:#069;font-weight:700">=</span> revCom(protospacer);
+    
+<span style="color:#af82d4">// Check if protospacer has (position-1) G, if not add G to beggining protospacer sequence and C to end of reverse complementary protospacer  </span>
+<span style="color:#069;font-weight:700">if</span> (protospacer.<span style="color:#45ae34;font-weight:700">charAt</span>(<span style="color:#a8017e">0</span>).<span style="color:#45ae34;font-weight:700">toUpperCase</span>() <span style="color:#069;font-weight:700">=</span><span style="color:#069;font-weight:700">=</span> <span style="color:#666">"G"</span>) { 
+    <span style="color:#069;font-weight:700">var</span> temp <span style="color:#069;font-weight:700">=</span> protospacer;
+    <span style="color:#069;font-weight:700">var</span> temp2 <span style="color:#069;font-weight:700">=</span> revComProtospacer;
+    protospacer <span style="color:#069;font-weight:700">=</span> temp.<span style="color:#45ae34;font-weight:700">substring</span>(<span style="color:#a8017e">1</span>,<span style="color:#a8017e">20</span>);
+    revComProtospacer <span style="color:#069;font-weight:700">=</span> temp2.<span style="color:#45ae34;font-weight:700">substring</span>(<span style="color:#a8017e">0</span>,<span style="color:#a8017e">19</span>); }
+<span style="color:#069;font-weight:700">else</span> {
+<span style="color:#069;font-weight:700">var</span> temp <span style="color:#069;font-weight:700">=</span> protospacer;
+<span style="color:#069;font-weight:700">var</span> temp2 <span style="color:#069;font-weight:700">=</span> revCom(temp.<span style="color:#45ae34;font-weight:700">substring</span>(<span style="color:#a8017e">1</span>,<span style="color:#a8017e">20</span>));
+protospacer <span style="color:#069;font-weight:700">=</span> <span style="color:#666">"G"</span> <span style="color:#069;font-weight:700">+</span> temp.<span style="color:#45ae34;font-weight:700">substring</span>(<span style="color:#a8017e">1</span>,<span style="color:#a8017e">20</span>);
+revComProtospacer <span style="color:#069;font-weight:700">=</span> temp2 <span style="color:#069;font-weight:700">+</span> <span style="color:#666">"C"</span>;
+}
+
+<span style="color:#af82d4">//output variables</span>
+<span style="color:#069;font-weight:700">var</span> bsa15 <span style="color:#069;font-weight:700">=</span> <span style="color:#666">"TCTT"</span> <span style="color:#069;font-weight:700">+</span> protospacer;
+<span style="color:#069;font-weight:700">var</span> bsa13 <span style="color:#069;font-weight:700">=</span> <span style="color:#666">"AAAC"</span> <span style="color:#069;font-weight:700">+</span> revComProtospacer;
+
+<span style="color:#af82d4">// output object</span>
+<span style="color:#069;font-weight:700">var</span> output <span style="color:#069;font-weight:700">=</span> {
+    bsa15 <span style="color:#069;font-weight:700">:</span> bsa15, 
+    bsa13 <span style="color:#069;font-weight:700">:</span> bsa13
+}
+
+</pre>
+</div>
+</div>
+<script type="text/javascript" src="javascripts/color.js"></script>
+  </body>
+</html>
